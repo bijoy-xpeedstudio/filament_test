@@ -14,28 +14,80 @@ use Filament\Tables;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Forms\Components\Fieldset;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\Filter;
+use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
+use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Tabs;
 
 class CustomerResource extends Resource
 {
     protected static ?string $model = Customer::class;
-
+    public Customer $customer;
     protected static ?string $navigationIcon = 'heroicon-o-collection';
 
     public static function form(Form $form): Form
     {
         return $form->schema([
             Fieldset::make('Customer Information')->schema([
-                Forms\Components\TextInput::make('name')->required(),
+                Forms\Components\TextInput::make('name')
+                    ->required()
+                    ->hint('Your full name here, including any middle names.')
+                    ->hintColor('success')
+                    ->hintIcon('heroicon-s-translate')
+                    ->extraInputAttributes(['title' => 'Text input'])
+                    ->autofocus()
+                    ->placeholder('Johddn Doe'),
+
+                Forms\Components\TextInput::make('domain')
+                    ->url()
+                    ->prefix('https://')
+                    ->suffix('.com'),
 
                 Forms\Components\Select::make('role_id')
                     ->options(Roles::pluck('name', 'id'))
                     ->relationship('roles', 'name')
                     ->required(),
 
-                Forms\Components\FileUpload::make('image')->image()
-                    //->rules('required|image|max:2048')
-                    ->required(),
-            ])->columns(2)
+                TextInput::make('code')->mask(fn (TextInput\Mask $mask) => $mask->enum(['F1', 'G2', 'H3'])),
+
+                Forms\Components\FileUpload::make('image')->image()->required(),
+                Forms\Components\TextInput::make('manufacturer')->datalist([
+                    'BWM',
+                    'Ford',
+                    'Mercedes-Benz',
+                    'Porsche',
+                    'Toyota',
+                    'Tesla',
+                    'Volkswagen',
+                ]),
+                Repeater::make('members')->schema([
+                    TextInput::make('name')->required(),
+                    Select::make('role')
+                        ->options([
+                            'member' => 'Member',
+                            'administrator' => 'Administrator',
+                            'owner' => 'Owner',
+                        ])
+                        ->required(),
+                ])->columnSpan(2)
+            ]),
+            Tabs::make('Heading')->tabs([
+                Tabs\Tab::make('Label 1')
+                    ->schema([
+                        // ...
+                    ]),
+                Tabs\Tab::make('Label 2')
+                    ->schema([
+                        // ...
+                    ]),
+                Tabs\Tab::make('Label 3')
+                    ->schema([
+                        // ...
+                    ]),
+            ])->columnSpan(2)
         ]);
     }
 
@@ -46,20 +98,20 @@ class CustomerResource extends Resource
                 Tables\Columns\TextColumn::make('name'),
                 Tables\Columns\TextColumn::make('roles.name'),
                 Tables\Columns\ImageColumn::make('image')->circular(),
-                // Tables\Columns\IconColumn::make('image')->options([
-                //     //'heroicon-o-x-circle',
-                //     'heroicon-o-pencil',
-                //     'heroicon-o-clock' => 'reviewing',
-                //     'heroicon-o-check-circle' => 'published',
-                // ])->colors([
-                //     'danger',
-                //     'danger' => 1,
-                //     'warning' => 'reviewing',
-                //     'success' => 'published',
-                // ])
             ])
             ->filters([
-                //
+                SelectFilter::make('Role')->options([
+                    '1' => 'admin',
+                    '2' => 'users',
+                ])->attribute('role_id'),
+                Filter::make('created_at')->form([
+                    Forms\Components\TextInput::make('name'),
+                ])->query(function (Builder $query, array $data): Builder {
+                    return $query->when(
+                        $data['name'],
+                        fn (Builder $query, $date): Builder => $query->where('name', 'LIKE', '%' . $date . '%'),
+                    );
+                })
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

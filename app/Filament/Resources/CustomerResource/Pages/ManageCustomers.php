@@ -5,6 +5,7 @@ namespace App\Filament\Resources\CustomerResource\Pages;
 use App\Filament\Resources\CustomerResource;
 use Filament\Pages\Actions;
 use Filament\Resources\Pages\ManageRecords;
+use Illuminate\Contracts\View\View;
 
 class ManageCustomers extends ManageRecords
 {
@@ -15,5 +16,12 @@ class ManageCustomers extends ManageRecords
         return [
             Actions\CreateAction::make(),
         ];
+    }
+
+    protected function getFooter(): View
+    {
+        return view('hello')->with([
+            'bijoy' => 'bijoy'
+        ]);
     }
 }
