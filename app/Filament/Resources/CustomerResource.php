@@ -21,6 +21,7 @@ use Filament\Notifications\Notification;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Tabs;
+use Filament\Forms\Components\BijoyTest;
 
 class CustomerResource extends Resource
 {
@@ -87,7 +88,9 @@ class CustomerResource extends Resource
                     ->schema([
                         // ...
                     ]),
-            ])->columnSpan(2)
+            ])->columnSpan(2),
+
+            BijoyTest::make('a;dkfasdlfkj')->getActiveTabx()
         ]);
     }
 
